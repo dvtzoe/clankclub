@@ -1,8 +1,9 @@
-from collections.abc import Iterable
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
+from collections.abc import Iterable
 from typing import cast
+
+from dotenv import load_dotenv
+from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
