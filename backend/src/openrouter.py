@@ -28,10 +28,6 @@ class OpenRouterClient:
             messages=cast(Iterable[ChatCompletionMessageParam], messages),
         )
 
-        print(f"---- {model} ----")
-        print(f"response content: {response.choices[0].message.content}")
-        print("---------------")
-
         return response.choices[0].message.content or ""
 
     async def multi_create_chat_completion(

@@ -24,7 +24,8 @@ async def discuss(user_query: str):
             },
             {"role": "user", "content": user_query},
         ]
-    ] * len(config.models)
+        for _ in config.models
+    ]
 
     # Get initial responses from each member
     models_responses_text = await client.multi_create_chat_completion(
@@ -71,8 +72,6 @@ async def discuss(user_query: str):
 
         # Conclude if consensus is reached
         if final_answer_counts / len(config.models) >= config.consensus_threshold:
-            print("---- Consensus reached ----")
-            print(f"Messages List: {messages_list}")
             return await client.create_chat_completion(
                 messages=[
                     {
