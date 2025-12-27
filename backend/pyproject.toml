@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "Backend for clackclub"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.127.0",
     "openai>=2.14.0",
@@ -12,9 +12,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "ruff>=0.14.10",
-]
+dev = ["ruff>=0.14.10"]
 
 [tool.ruff.lint]
 extend-select = ["I"]
