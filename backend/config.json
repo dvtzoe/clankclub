@@ -8,5 +8,5 @@
     "x-ai/grok-4"
   ],
   "president_model": "google/gemini-3-pro-preview",
-  "consensus_threshold": 0.8
+  "consensus_threshold": 0.6
 }

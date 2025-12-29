@@ -1,13 +1,13 @@
 import asyncio
 import os
 from collections.abc import Iterable
-from typing import cast
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat import ChatCompletion
 
 from config_loader import config
+from schemas import Message, MessagesList
 
 
 class OpenRouterClient:
@@ -20,21 +20,24 @@ class OpenRouterClient:
 
     async def create_chat_completion(
         self,
-        messages: list[dict[str, str]],
+        messages: Iterable[Message],
         model: str,
-    ) -> str:
+    ) -> ChatCompletion:
         response = await self.openai.chat.completions.create(
             model=model,
-            messages=cast(Iterable[ChatCompletionMessageParam], messages),
+            messages=[message.to_openai() for message in messages],
         )
+        # print(f"Messages: {messages}")
+        print(f"Model: {model}")
+        print(f"Response: {response.choices[0].message.content}")
 
-        return response.choices[0].message.content or ""
+        return response
 
     async def multi_create_chat_completion(
         self,
-        messages_list: list[list[dict[str, str]]],
-        models: list[str],
-    ) -> list[str]:
+        messages_list: MessagesList,
+        models: Iterable[str],
+    ) -> list[ChatCompletion]:
         tasks = [
             self.create_chat_completion(messages=messages, model=model)
             for messages, model in zip(messages_list, models)
