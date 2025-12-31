@@ -20,8 +20,6 @@ services:
     build: backend
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
     command: sh -c "uv sync --active && uv run fastapi run src/main.py --host 0.0.0.0"
