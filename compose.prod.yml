@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres
+    container_name: db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 1s
+      timeout: 5s
+      retries: 20
+    env_file:
+      - ./db/.env
+    volumes:
+      - clankclub_data:/var/lib/postgresql
+
+  backend:
+    depends_on:
+      db:
+        condition: service_healthy
+    build: backend
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    command: sh -c "uv sync --active && uv run fastapi run src/main.py --host 0.0.0.0"
+
+volumes:
+  clankclub_data:

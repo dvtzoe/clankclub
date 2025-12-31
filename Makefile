@@ -1,10 +1,10 @@
-.PHONY: up down clean
+.PHONY: dev prod down
 
-up:
-	docker compose up --build
+dev:
+	docker compose -f compose.dev.yml up --build
+
+prod:
+	docker compose -f compose.prod.yml up --build
 
 down:
 	docker compose down
-
-clean:
-	docker compose down -v --remove-orphans
