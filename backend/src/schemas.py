@@ -1,4 +1,5 @@
-from typing import Literal, override
+from typing import Literal
+from uuid import UUID, uuid4
 
 from openai.types.chat import (
     ChatCompletion,
@@ -20,47 +21,50 @@ class DiscussRequest(BaseModel):
 
 
 class SystemMessage(BaseModel):
+    id: UUID = uuid4()
     role: Literal["system"] = "system"
-    content: str | None
+    content: str
 
     def to_openai(self) -> ChatCompletionMessageParam:
-        return {"role": self.role, "content": self.content or ""}
-
-    @override
-    def __str__(self) -> str:
-        return f"System: {self.content}"
+        return {"role": self.role, "content": self.content}
 
 
 class UserMessage(BaseModel):
+    id: UUID = uuid4()
     role: Literal["user"] = "user"
-    content: str | None
+    content: str
 
     def to_openai(self) -> ChatCompletionMessageParam:
-        return {"role": self.role, "content": self.content or ""}
-
-    @override
-    def __str__(self) -> str:
-        return f"User: {self.content}"
+        return {"role": self.role, "content": self.content}
 
 
 class AssistantMessage(BaseModel):
+    id: UUID = uuid4()
     role: Literal["assistant"] = "assistant"
 
-    reply: ChatCompletion
+    raw: ChatCompletion
 
     @property
     def content(self) -> str | None:
-        return self.reply.choices[0].message.content if self.reply else None
+        return self.raw.choices[0].message.content if self.raw else None
 
     def to_openai(self) -> ChatCompletionMessageParam:
         return {"role": self.role, "content": self.content or ""}
-
-    @override
-    def __str__(self) -> str:
-        return f"Assistant: {self.content}"
 
 
 Message = SystemMessage | UserMessage | AssistantMessage
 
-MessagesList = list[list[Message]]
-MessagesHistory = list[Message | list[Message]]
+
+class MessagesHistoryNode(BaseModel):
+    id: UUID = uuid4()
+    message_id: UUID | list[UUID]
+    next_node: list[UUID] | None = None
+
+
+MessagesHistory = list[MessagesHistoryNode]
+
+
+class Session(BaseModel):
+    id: UUID = uuid4()
+    title: str = "New Session"
+    messages_history: MessagesHistory

@@ -1,11 +1,11 @@
-from typing import cast
+from uuid import UUID
 
 from config_loader import config
 from openrouter import OpenRouterClient
 from schemas import (
     AssistantMessage,
-    MessagesHistory,
-    MessagesList,
+    Message,
+    MessagesHistoryNode,
     SystemMessage,
     UserMessage,
 )
@@ -27,26 +27,31 @@ You will go first by providing your initial response to the user's query.
 async def discuss(user_query: str):
     client = OpenRouterClient()
 
-    # Generate responses from each member
-    messages_list: MessagesList = cast(
-        MessagesList,
+    # Generate responses from each member and map to messages list and history
+    initial_system_message = SystemMessage(content=QUERY_SYSTEM_PROMPT)
+    initial_user_message = UserMessage(content=user_query)
+
+    messages_list: list[list[Message]] = [
         [
-            [
-                SystemMessage(content=QUERY_SYSTEM_PROMPT),
-                UserMessage(content=user_query),
-            ]
-            for _ in config.models
-        ],
+            initial_system_message,
+            initial_user_message,
+        ]
+        for _ in config.models
+    ]
+
+    initial_user_message_node = MessagesHistoryNode(
+        message_id=initial_user_message.id,
     )
 
-    messages_history: MessagesHistory = cast(
-        MessagesHistory,
-        [
-            SystemMessage(content=QUERY_SYSTEM_PROMPT),
-            UserMessage(content=user_query),
-            [],
-        ],
+    initial_system_message_node = MessagesHistoryNode(
+        message_id=initial_system_message.id,
+        next_node=[initial_user_message_node.id],
     )
+
+    messages_history: list[MessagesHistoryNode] = [
+        initial_system_message_node,
+        initial_user_message_node,
+    ]
 
     # Get initial responses from each member
     models_replies = await client.multi_create_chat_completion(
@@ -55,18 +60,16 @@ async def discuss(user_query: str):
     )
 
     # Append model responses to messages
+    message_ids = []
     for i, reply in enumerate(models_replies):
-        messages_list[i].append(
-            AssistantMessage(
-                reply=reply,
-            )
-        )
-        if isinstance(messages_history[2], list):
-            messages_history[2].append(
-                AssistantMessage(
-                    reply=reply,
-                )
-            )
+        message = AssistantMessage(raw=reply)
+        messages_list[i].append(message)
+        message_ids.append(message.id)
+    message_history_node = MessagesHistoryNode(
+        message_id=message_ids,
+    )
+    messages_history[-1].next_node = [message_history_node.id]
+    messages_history.append(message_history_node)
 
     while True:
         # Add other members' responses to each member's messages
@@ -87,16 +90,17 @@ async def discuss(user_query: str):
 
         print(f"New round of responses: {models_replies}")
 
-        messages_history.append([])
         # Append new model responses to messages
+        message_ids: list[UUID] = []
         for i, reply in enumerate(models_replies):
-            messages_list[i].append(AssistantMessage(reply=reply))
-            if isinstance(messages_history[-1], list):
-                messages_history[-1].append(
-                    AssistantMessage(
-                        reply=reply,
-                    )
-                )
+            message = AssistantMessage(raw=reply)
+            messages_list[i].append(message)
+            message_ids.append(message.id)
+        message_history_node = MessagesHistoryNode(
+            message_id=message_ids,
+        )
+        messages_history[-1].next_node = [message_history_node.id]
+        messages_history.append(message_history_node)
 
         # Check for consensus
         final_answer_counts = 0
@@ -109,17 +113,15 @@ async def discuss(user_query: str):
 
         # for some reason sometimes llm returns nothing
         survivors_counts = 0
-        if isinstance(messages_history[-1], list):
-            for member_message in messages_history[-1]:
-                if (
-                    member_message
-                    and member_message.content
-                    and "[FINAL ANSWER]" in member_message.content
-                ):
-                    survivors_counts += 1
+        for member_message in messages_list[:][-1]:
+            if (
+                member_message
+                and member_message.content
+                and "[FINAL ANSWER]" in member_message.content
+            ):
+                survivors_counts += 1
 
         # Conclude if consensus is reached
-        print(f"History: {messages_history}")
         print(
             f"Agreement: {final_answer_counts} / {survivors_counts} (threshold: {config.consensus_threshold})"
         )
@@ -140,13 +142,13 @@ async def discuss(user_query: str):
                                                     if member_message
                                                     else ""
                                                     for i, member_message in enumerate(
-                                                        history
+                                                        messages
                                                     )
                                                 ]
                                             )
-                                            if isinstance(history, list)
-                                            else f"{history.role}: {history.content}\n"
-                                            for history in messages_history[1:]
+                                            if messages[0].role == "assistant"
+                                            else f"{messages[0].role}: {messages[0].content}\n"
+                                            for messages in messages_list[:][1:]
                                         ]
                                     )
                                 }\n""",
