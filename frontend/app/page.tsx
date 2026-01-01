@@ -1,3 +1,8 @@
+import ChatInput from "@/components/chat/ChatInput";
 export default function Page() {
-  return;
+  return (
+    <div>
+      <ChatInput />
+    </div>
+  );
 }
