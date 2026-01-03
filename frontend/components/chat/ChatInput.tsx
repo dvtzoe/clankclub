@@ -1,6 +1,4 @@
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -9,7 +7,7 @@ import { Send, Paperclip } from "lucide-react";
 export default async function ChatInput() {
   return (
     <div className="w-full">
-      <Card size="sm" className="border-t">
+      <Card size="sm">
         <form>
           <CardContent className="space-y-2">
             <Textarea />
@@ -22,7 +20,6 @@ export default async function ChatInput() {
               </Button>
             </div>
           </CardContent>
-
         </form>
       </Card>
     </div>
