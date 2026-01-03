@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from models.session import SessionModel
-from schemas.message import MessageTreeSchema, SystemMessage
+from schemas.message import MessageTreeSchema
 from schemas.session import SessionSchema
 
 router = APIRouter(prefix="/api/sessions")
@@ -39,9 +39,7 @@ async def new_session(db_session: AsyncSession = Depends(get_db)):
     """
     Create a new session.
     """
-    session_schema = SessionSchema(
-        message_tree=MessageTreeSchema(root=SystemMessage(content="").id)
-    )
+    session_schema = SessionSchema(message_tree=MessageTreeSchema())
 
     session = SessionModel(**session_schema.model_dump(mode="json"))
     await session.save(db_session)

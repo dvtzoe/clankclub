@@ -63,7 +63,7 @@ class MessageNode(BaseModel):
 
 class MessageTreeSchema(BaseModel):
     nodes: dict[UUID, MessageNode] = Field(default_factory=dict)
-    root: UUID
+    root: UUID | None = None
 
     def add_node(self, node: MessageNode):
         self.nodes[node.id] = node
