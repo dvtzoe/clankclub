@@ -54,6 +54,7 @@ function CodeBlock({ children, language }: { children: string; language: string 
         PreTag="div"
         showLineNumbers={language !== "text"}
         wrapLongLines
+        className="text-base"
       >
         {children}
       </SyntaxHighlighter>
@@ -127,7 +128,7 @@ export default function ChatBubble({
                   <CodeBlock language="text">{codeString}</CodeBlock>
                 ) : (
                   <code
-                    className={`${className || ""} bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm`}
+                    className={`${className || ""} bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded`}
                     {...rest}
                   >
                     {children}
@@ -189,13 +190,13 @@ export default function ChatBubble({
                 return <h6 className="text-sm font-bold mt-2 mb-1">{children}</h6>;
               },
               ul({ children }) {
-                return <ul className="list-disc list-inside my-2 space-y-1">{children}</ul>;
+                return <ul className="list-disc list-inside space-y-1">{children}</ul>;
               },
               ol({ children }) {
                 return <ol className="list-decimal list-inside my-2 space-y-1">{children}</ol>;
               },
               li({ children }) {
-                return <li className="ml-4">{children}</li>;
+                return <li>{children}</li>;
               },
               blockquote({ children }) {
                 return (
