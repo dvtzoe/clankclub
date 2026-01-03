@@ -19,7 +19,7 @@ class SessionModel(BaseModel):
     )
     title: Mapped[str] = mapped_column(nullable=False)
 
-    message_tree: Mapped[dict] = mapped_column(  # pyright: ignore [reportMissingTypeArgument]
+    message_tree: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB),
         nullable=False,
     )

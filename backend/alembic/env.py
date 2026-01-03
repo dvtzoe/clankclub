@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy import pool
 
-from alembic import context  # pyright: ignore[reportAttributeAccessIssue]
+from alembic import context
 
 from models.base import BaseModel
 
@@ -58,7 +58,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):  # pyright: ignore [reportMissingParameterType]
+def do_run_migrations(connection):
     """THIS MUST BE SYNC"""
     context.configure(
         connection=connection,

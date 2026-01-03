@@ -30,7 +30,7 @@ class MessageNodeModel(BaseModel):
         nullable=False,
     )
 
-    message: Mapped[dict] = mapped_column(  # pyright: ignore[reportMissingTypeArgument]
+    message: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB),
         nullable=False,
     )

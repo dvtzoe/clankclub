@@ -1,6 +1,6 @@
 # Copied from https://github.com/grillazz/fastapi-sqlalchemy-asyncpg/blob/main/app/models/base.py
 
-from asyncpg import UniqueViolationError  # pyright: ignore[reportMissingTypeStubs]
+from asyncpg import UniqueViolationError
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +25,7 @@ class BaseModel(DeclarativeBase):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=repr(ex)
             ) from ex
 
-    async def update(self, **kwargs):  # pyright: ignore[reportMissingParameterType]
+    async def update(self, **kwargs):
         try:
             for k, v in kwargs.items():
                 setattr(self, k, v)
