@@ -1,11 +1,11 @@
-from uuid import UUID
-
 from config_loader import config
 from openrouter import OpenRouterClient
-from schemas import (
+from schemas.message import (
     AssistantMessage,
     Message,
-    MessagesHistoryNode,
+    MessageNode,
+    MessageTreeSchema,
+    MultiModelMessage,
     SystemMessage,
     UserMessage,
 )
@@ -31,28 +31,23 @@ async def discuss(user_query: str):
     initial_system_message = SystemMessage(content=QUERY_SYSTEM_PROMPT)
     initial_user_message = UserMessage(content=user_query)
 
-    messages_list: list[list[Message]] = [
-        [
+    messages_list: dict[str, list[Message]] = {}
+    for i, model in enumerate(config.models):
+        messages_list[model] = [
             initial_system_message,
             initial_user_message,
         ]
-        for _ in config.models
-    ]
 
-    initial_user_message_node = MessagesHistoryNode(
-        message_id=initial_user_message.id,
+    # Initialize message history tree
+    first_node = MessageNode(message=initial_system_message)
+    current_node = MessageNode(message=initial_user_message)
+
+    messages_tree = (
+        MessageTreeSchema(root=first_node.id)
+        .add_node(first_node)
+        .add_node(current_node)
+        .link(first_node.id, current_node.id)
     )
-
-    initial_system_message_node = MessagesHistoryNode(
-        message_id=initial_system_message.id,
-        next_node=[initial_user_message_node.id],
-    )
-
-    messages_history: list[MessagesHistoryNode] = [
-        initial_system_message_node,
-        initial_user_message_node,
-    ]
-
     # Get initial responses from each member
     models_replies = await client.multi_create_chat_completion(
         messages_list=messages_list,
@@ -60,25 +55,23 @@ async def discuss(user_query: str):
     )
 
     # Append model responses to messages
-    message_ids = []
-    for i, reply in enumerate(models_replies):
+    replies_message: MultiModelMessage = {}
+    for model, reply in models_replies.items():
         message = AssistantMessage(raw=reply)
-        messages_list[i].append(message)
-        message_ids.append(message.id)
-    message_history_node = MessagesHistoryNode(
-        message_id=message_ids,
-    )
-    messages_history[-1].next_node = [message_history_node.id]
-    messages_history.append(message_history_node)
+        messages_list[model].append(message)
+        replies_message[model] = message
+    previous_id = current_node.id
+    current_node = MessageNode(message=replies_message)
+    messages_tree.add_node(current_node).link(previous_id, current_node.id)
 
     while True:
         # Add other members' responses to each member's messages
-        for i, messages in enumerate(messages_list):
+        for model_from_list, messages in messages_list.items():
             content = """Here are the other members' responses to the same question:
 """
-            for j, reply in enumerate(models_replies):
-                if i != j and reply:
-                    content += f"Member {j + 1} response: {reply}\n"
+            for i, (model_reply, reply) in enumerate(models_replies.items()):
+                if model_from_list != model_reply and reply:
+                    content += f"Member {i + 1} response: {reply}\n"
 
             messages.append(SystemMessage(content=content))
 
@@ -91,20 +84,18 @@ async def discuss(user_query: str):
         print(f"New round of responses: {models_replies}")
 
         # Append new model responses to messages
-        message_ids: list[UUID] = []
-        for i, reply in enumerate(models_replies):
+        replies_message = {}
+        for model, reply in models_replies.items():
             message = AssistantMessage(raw=reply)
-            messages_list[i].append(message)
-            message_ids.append(message.id)
-        message_history_node = MessagesHistoryNode(
-            message_id=message_ids,
-        )
-        messages_history[-1].next_node = [message_history_node.id]
-        messages_history.append(message_history_node)
+            messages_list[model].append(message)
+            replies_message[model] = message
+        previous_id = current_node.id
+        current_node = MessageNode(message=replies_message)
+        messages_tree.add_node(current_node).link(previous_id, current_node.id)
 
         # Check for consensus
         final_answer_counts = 0
-        for reply in models_replies:
+        for reply in models_replies.values():
             if (
                 reply.choices[0].message.content is not None
                 and "[FINAL ANSWER]" in reply.choices[0].message.content
@@ -113,7 +104,7 @@ async def discuss(user_query: str):
 
         # for some reason sometimes llm returns nothing
         survivors_counts = 0
-        for member_message in messages_list[:][-1]:
+        for member_message in list(messages_list.values())[:][-1]:
             if (
                 member_message
                 and member_message.content
@@ -133,7 +124,8 @@ async def discuss(user_query: str):
                             SystemMessage(
                                 content=f"""Provide the final answer. of the question '{
                                     user_query
-                                }'.Do not reference other members in your final answer.{
+                                }'.Do not reference other members 
+                                and do not include [FINAL ANSWER] in your final answer{
                                     "\n".join(
                                         [
                                             "\n".join(
@@ -148,7 +140,9 @@ async def discuss(user_query: str):
                                             )
                                             if messages[0].role == "assistant"
                                             else f"{messages[0].role}: {messages[0].content}\n"
-                                            for messages in messages_list[:][1:]
+                                            for messages in list(
+                                                messages_list.values()
+                                            )[:][1:]
                                         ]
                                     )
                                 }\n""",

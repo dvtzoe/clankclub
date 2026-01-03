@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-from schemas import Config
+from schemas.config import Config
 
 load_dotenv()
 with open(os.getenv("CONFIG_PATH") or r"../config.json", "r") as config_file:

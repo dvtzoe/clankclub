@@ -1,9 +1,12 @@
 import fastapi
 
+from api.sessions import router as sessions_router
 from discuss import discuss
-from schemas import DiscussRequest
+from schemas.api.discuss import DiscussRequest
 
 app = fastapi.FastAPI()
+
+app.include_router(sessions_router)
 
 
 @app.get("/health")
