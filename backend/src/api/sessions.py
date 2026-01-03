@@ -44,3 +44,15 @@ async def new_session(db_session: AsyncSession = Depends(get_db)):
     session = SessionModel(**session_schema.model_dump(mode="json"))
     await session.save(db_session)
     return session
+
+
+@router.get("/{session_id}", status_code=status.HTTP_200_OK)
+async def get_session(session_id: str, db_session: AsyncSession = Depends(get_db)):
+    """
+    Retrieve a session by ID.
+    """
+    session = await db_session.get(SessionModel, session_id)
+    if not session:
+        return {"error": "Session not found"}, status.HTTP_404_NOT_FOUND
+
+    return session
