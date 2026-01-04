@@ -1,24 +1,17 @@
+from contextlib import asynccontextmanager
+
 import fastapi
 
 from api.sessions import router as sessions_router
-from discuss import discuss
-from schemas.api.discuss import DiscussRequest
+from core.config import Config
+
+
+@asynccontextmanager
+async def lifespan(_app: fastapi.FastAPI):
+    Config.load()
+    yield
+
 
 app = fastapi.FastAPI()
 
 app.include_router(sessions_router)
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
-@app.post("/discuss")
-async def discuss_endpoint(request: DiscussRequest):
-    user_query = request.query
-    if not user_query:
-        return fastapi.Response(status_code=400, content="Query is required")
-
-    response = await discuss(user_query)
-    return {"response": response}

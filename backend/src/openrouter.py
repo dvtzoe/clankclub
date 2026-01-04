@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
-from config_loader import config
+from core.config import Config
 from schemas import Message
 
 
@@ -14,8 +14,8 @@ class OpenRouterClient:
     def __init__(self):
         load_dotenv()
         self.openai: AsyncOpenAI = AsyncOpenAI(
-            api_key=os.getenv("OPENAI_API_KEY") or config.openai_api_key,
-            base_url=config.openai_base_url,
+            api_key=os.getenv("OPENAI_API_KEY") or Config.get().openai_api_key,
+            base_url=Config.get().openai_base_url,
         )
 
     async def create_chat_completion(

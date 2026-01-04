@@ -1,4 +1,4 @@
-from config_loader import config
+from core.config import Config
 from openrouter import OpenRouterClient
 from schemas.message import (
     AssistantMessage,
@@ -26,6 +26,7 @@ You will go first by providing your initial response to the user's query.
 
 async def discuss(user_query: str):
     client = OpenRouterClient()
+    config = Config.get()
 
     # Generate responses from each member and map to messages list and history
     initial_system_message = SystemMessage(content=QUERY_SYSTEM_PROMPT)
