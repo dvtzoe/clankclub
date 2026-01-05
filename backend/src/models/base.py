@@ -25,7 +25,7 @@ class BaseModel(DeclarativeBase):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=repr(ex)
             ) from ex
 
-    async def update(self, **kwargs):
+    async def update(self, **kwargs):  # pyright: ignore[reportMissingParameterType]
         try:
             for k, v in kwargs.items():
                 setattr(self, k, v)

@@ -13,8 +13,8 @@ CONFIG_PATH = Path(os.getenv("CONFIG_PATH") or r"../config.json")
 
 
 class Config:
-    _config: ConfigSchema = {}
-    _lock = Lock()
+    _config: ConfigSchema = ConfigSchema()
+    _lock: Lock = Lock()
 
     @classmethod
     def load(cls) -> ConfigSchema:

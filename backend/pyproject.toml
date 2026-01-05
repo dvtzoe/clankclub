@@ -15,7 +15,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.14.10"]
+dev = [
+    "asyncpg-stubs>=0.31.1",
+    "ruff>=0.14.10",
+]
 
 [tool.uv]
 package = true

@@ -20,6 +20,7 @@ services:
     build: backend
     volumes:
       - ./backend:/app
+      - backend_venv:/app/.venv
     env_file:
       - ./backend/.env
     ports:
@@ -28,3 +29,4 @@ services:
 
 volumes:
   clankclub_data:
+  backend_venv:
