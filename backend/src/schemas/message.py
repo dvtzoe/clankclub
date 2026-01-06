@@ -1,4 +1,4 @@
-from typing import Literal, override
+from typing import Literal
 from uuid import UUID, uuid4
 
 from openai.types.chat import (
@@ -8,32 +8,31 @@ from openai.types.chat import (
 from pydantic import BaseModel, Field
 
 
-class BaseMessage(BaseModel):
-    id: UUID = Field(default_factory=uuid4)
-
-    def to_openai(self) -> ChatCompletionMessageParam:
-        raise NotImplementedError
-
-
-class SystemMessage(BaseMessage):
+class SystemMessage(BaseModel):
     role: Literal["system"] = "system"
     content: str
 
-    @override
     def to_openai(self) -> ChatCompletionMessageParam:
         return {"role": self.role, "content": self.content}
 
 
-class UserMessage(BaseMessage):
+class UserMessage(BaseModel):
     role: Literal["user"] = "user"
     content: str
 
-    @override
     def to_openai(self) -> ChatCompletionMessageParam:
         return {"role": self.role, "content": self.content}
 
 
-class AssistantMessage(BaseMessage):
+class AssistantMessage(BaseModel):
+    role: Literal["assistant"] = "assistant"
+    content: str
+
+    def to_openai(self) -> ChatCompletionMessageParam:
+        return {"role": self.role, "content": self.content}
+
+
+class ResponseMessage(BaseModel):
     role: Literal["assistant"] = "assistant"
 
     raw: ChatCompletion
@@ -42,21 +41,20 @@ class AssistantMessage(BaseMessage):
     def content(self) -> str | None:
         return self.raw.choices[0].message.content if self.raw else None
 
-    @override
     def to_openai(self) -> ChatCompletionMessageParam:
         return {"role": self.role, "content": self.content or ""}
 
 
-Message = SystemMessage | UserMessage | AssistantMessage
+UniMessage = SystemMessage | UserMessage | AssistantMessage | ResponseMessage
 
-MultiModelMessage = dict[str, Message]
+Message = UniMessage | dict[str, UniMessage]
 
 
 class MessageNode(BaseModel):
     id: UUID = Field(default_factory=uuid4)
-    message: Message | MultiModelMessage
-    prev: UUID | None = None
-    next: list[UUID] = Field(default_factory=list)
+    message: Message
+    parent: UUID | None = None
+    children: list[UUID] = Field(default_factory=list)
     # index of the selected next_node in case of parallel messages
     selected: int = 0
 
@@ -71,8 +69,8 @@ class MessageTreeSchema(BaseModel):
         return self
 
     def link(self, prev: UUID, next: UUID):
-        self.nodes[prev].next.append(next)
-        self.nodes[next].prev = prev
+        self.nodes[prev].children.append(next)
+        self.nodes[next].parent = prev
 
         return self
 
@@ -84,30 +82,30 @@ class MessageTreeSchema(BaseModel):
             if key >= 0:
                 for _ in range(key):
                     if (
-                        not self.nodes[node_id].next
-                        or len(self.nodes[node_id].next) == 0
+                        not self.nodes[node_id].children
+                        or len(self.nodes[node_id].children) == 0
                     ):
                         raise IndexError("No next nodes available")
-                    node_id = self.nodes[node_id].next[self.nodes[node_id].selected]
+                    node_id = self.nodes[node_id].children[self.nodes[node_id].selected]
             else:
                 for _ in range(-key):
                     if not node_id:
                         raise Exception("Node ID is None")
-                    if not self.nodes[node_id].prev:
+                    if not self.nodes[node_id].parent:
                         raise IndexError("No previous nodes available")
-                    node_id = self.nodes[node_id].prev
+                    node_id = self.nodes[node_id].parent
         else:
             node_id = self.root
             for k in key:
-                if not self.nodes[node_id].next:
+                if not self.nodes[node_id].children:
                     raise IndexError("No next nodes available")
-                node_id = self.nodes[node_id].next[k]
+                node_id = self.nodes[node_id].children[k]
         if not node_id:
             raise Exception("Node ID is None")
         return node_id
 
-    def end(self, node_id: UUID) -> MessageNode:
-        node = self.nodes[node_id]
-        while node.next:
-            node = self.nodes[node.next[node.selected]]
+    def end(self) -> MessageNode:
+        node = self.nodes[self.root]
+        while node.children:
+            node = self.nodes[node.children[node.selected]]
         return node

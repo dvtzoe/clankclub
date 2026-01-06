@@ -9,7 +9,7 @@ from schemas.config import ConfigPatchSchema, ConfigSchema
 
 load_dotenv()
 
-CONFIG_PATH = Path(os.getenv("CONFIG_PATH") or r"../config.json")
+CONFIG_PATH = Path(os.getenv("CONFIG_PATH") or r"config.json")
 
 
 class Config:
@@ -19,7 +19,7 @@ class Config:
     @classmethod
     def load(cls) -> ConfigSchema:
         with cls._lock:
-            cls._config = json.loads(CONFIG_PATH.read_text())
+            cls._config = ConfigSchema(**json.loads(CONFIG_PATH.read_text()))  # pyright: ignore[reportAny]
             return cls._config
 
     @classmethod

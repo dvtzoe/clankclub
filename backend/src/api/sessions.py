@@ -4,8 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from models.session import SessionModel
-from schemas.message import MessageTreeSchema
-from schemas.session import SessionSchema
 
 router = APIRouter(prefix="/api/sessions")
 
@@ -25,25 +23,13 @@ async def get_sessions(db_session: AsyncSession = Depends(get_db)):
     for row in result.all():
         sessions.append(
             {
-                "id": row.id,
-                "title": row.title,
-                "updated_at": row.updated_at,
+                "id": row.id,  # pyright: ignore[reportAny]
+                "title": row.title,  # pyright: ignore[reportAny]
+                "updated_at": row.updated_at,  # pyright: ignore[reportAny]
             }
         )
 
     return sessions
-
-
-@router.get("/new", status_code=status.HTTP_200_OK)
-async def new_session(db_session: AsyncSession = Depends(get_db)):
-    """
-    Create a new session.
-    """
-    session_schema = SessionSchema(message_tree=MessageTreeSchema())
-
-    session = SessionModel(**session_schema.model_dump(mode="json"))
-    await session.save(db_session)
-    return session
 
 
 @router.get("/{session_id}", status_code=status.HTTP_200_OK)

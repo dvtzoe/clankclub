@@ -7,9 +7,10 @@ from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
 from core.config import Config
-from schemas import Message
+from schemas import UniMessage
 
 load_dotenv()
+Config.load()
 
 
 class LLM:
@@ -21,7 +22,7 @@ class LLM:
     @classmethod
     async def create_chat_completion(
         cls,
-        messages: Iterable[Message],
+        messages: Iterable[UniMessage],
         model: str,
     ) -> ChatCompletion:
         response = await cls.openai.chat.completions.create(
@@ -37,12 +38,12 @@ class LLM:
     @classmethod
     async def multi_create_chat_completion(
         cls,
-        messages_list: dict[str, list[Message]],
+        messages_mapped: dict[str, list[UniMessage]],
         models: list[str],
     ) -> dict[str, ChatCompletion]:
         tasks = [
             cls.create_chat_completion(messages=messages, model=model)
-            for messages, model in zip(messages_list.values(), models)
+            for messages, model in zip(messages_mapped.values(), models)
         ]
 
         responses = await asyncio.gather(*tasks)
