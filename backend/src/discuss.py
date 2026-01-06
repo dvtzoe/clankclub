@@ -1,5 +1,5 @@
 from core.config import Config
-from openrouter import OpenRouterClient
+from core.llm import LLM
 from schemas.message import (
     AssistantMessage,
     Message,
@@ -25,7 +25,6 @@ You will go first by providing your initial response to the user's query.
 
 
 async def discuss(user_query: str):
-    client = OpenRouterClient()
     config = Config.get()
 
     # Generate responses from each member and map to messages list and history
@@ -50,7 +49,7 @@ async def discuss(user_query: str):
         .link(first_node.id, current_node.id)
     )
     # Get initial responses from each member
-    models_replies = await client.multi_create_chat_completion(
+    models_replies = await LLM.multi_create_chat_completion(
         messages_list=messages_list,
         models=config.models,
     )
@@ -77,7 +76,7 @@ async def discuss(user_query: str):
             messages.append(SystemMessage(content=content))
 
         # Get new responses from each member
-        models_replies = await client.multi_create_chat_completion(
+        models_replies = await LLM.multi_create_chat_completion(
             messages_list=messages_list,
             models=config.models,
         )
@@ -120,7 +119,7 @@ async def discuss(user_query: str):
         if final_answer_counts / survivors_counts >= config.consensus_threshold:
             return (
                 (
-                    await client.create_chat_completion(
+                    await LLM.create_chat_completion(
                         messages=[
                             SystemMessage(
                                 content=f"""Provide the final answer. of the question '{

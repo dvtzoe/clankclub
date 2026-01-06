@@ -9,21 +9,22 @@ from openai.types.chat import ChatCompletion
 from core.config import Config
 from schemas import Message
 
+load_dotenv()
 
-class OpenRouterClient:
-    def __init__(self):
-        load_dotenv()
-        self.openai: AsyncOpenAI = AsyncOpenAI(
-            api_key=os.getenv("OPENAI_API_KEY") or Config.get().openai_api_key,
-            base_url=Config.get().openai_base_url,
-        )
 
+class LLM:
+    openai: AsyncOpenAI = AsyncOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY") or Config.get().openai_api_key,
+        base_url=Config.get().openai_base_url,
+    )
+
+    @classmethod
     async def create_chat_completion(
-        self,
+        cls,
         messages: Iterable[Message],
         model: str,
     ) -> ChatCompletion:
-        response = await self.openai.chat.completions.create(
+        response = await cls.openai.chat.completions.create(
             model=model,
             messages=[message.to_openai() for message in messages],
         )
@@ -33,13 +34,14 @@ class OpenRouterClient:
 
         return response
 
+    @classmethod
     async def multi_create_chat_completion(
-        self,
+        cls,
         messages_list: dict[str, list[Message]],
         models: list[str],
     ) -> dict[str, ChatCompletion]:
         tasks = [
-            self.create_chat_completion(messages=messages, model=model)
+            cls.create_chat_completion(messages=messages, model=model)
             for messages, model in zip(messages_list.values(), models)
         ]
 
