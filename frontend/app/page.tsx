@@ -1,5 +1,6 @@
 import ChatInput from "@/components/chat/ChatInput";
 import ChatBubble from "@/components/chat/ChatBubble";
+import ChatTitle from "@/components/chat/ChatTitle";
 
 const testMarkdown = `# Heading 1
 ## Heading 2
@@ -149,6 +150,7 @@ This content is hidden by default and can be revealed by clicking the summary.
 export default function Page() {
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-4">
+      <ChatTitle title="Test Chat Features" />
       <ChatInput />
 
       {/* User message test */}

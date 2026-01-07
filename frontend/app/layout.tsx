@@ -36,7 +36,7 @@ export default function RootLayout({
         <SidebarProvider>
           <AppSidebar />
           <main className="w-full h-screen overflow-auto relative">
-            <Topbar showLogo />
+            <Topbar />
             {children}
           </main>
 
