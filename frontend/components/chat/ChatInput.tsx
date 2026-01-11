@@ -13,7 +13,7 @@ export default async function ChatInput() {
             <Textarea />
             <div className="flex flex-row justify-between">
               <Button variant="ghost">
-                <Paperclip /> Attact File
+                <Paperclip /> Attach File
               </Button>
               <Button type="submit" size="icon">
                 <Send />
