@@ -164,7 +164,7 @@ export default function Page() {
       <ChatBubble loading />
 
       {/* Basic Markdown test */}
-      <ChatBubble message={testMarkdown} />
+      <ChatBubble message={testMarkdown} confidence={0.8} opinions={[{ model: "GPT-4o", opinion: "Testing opinion" }, { model: "Gemini 3", opinion: "Testing opinion" }, { model: "Claude Opus 4.5", opinion: "Testing Opinion" }]} />
 
       {/* Code blocks test */}
       <ChatBubble message={testCodeBlocks} />
