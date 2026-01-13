@@ -12,14 +12,14 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { Plus, HatGlasses, EllipsisVertical, SquarePen, Trash } from "lucide-react";
+import { Plus, HatGlasses, EllipsisVertical, SquarePen, Trash, Share2 } from "lucide-react";
 
 import Link from "next/link";
 
@@ -63,6 +63,8 @@ export default async function AppSidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="right" align="start">
                   <DropdownMenuItem><SquarePen /> Rename</DropdownMenuItem>
+                  <DropdownMenuItem><Share2 /> Share</DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem variant="destructive"><Trash /> Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
